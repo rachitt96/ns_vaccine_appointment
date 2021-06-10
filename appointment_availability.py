@@ -42,6 +42,7 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
             print("***************** appointment found **************")
             print()
             print(each_clinic["mapsLocationString"])
+            print("Age Eligibility:" + str(each_clinic["minAge"]) + "+")
 
             if(get_time_slots):
                 current_date = date.today()
@@ -53,13 +54,28 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
                         'appointmentTypeId': each_clinic["appointmentTypeId"],
                         'timezone': "America/Halifax",
                         'startDate': current_date.strftime('%Y-%m-%d'),
-                        'endDate': end_date.strftime('%Y-%m-%d'),
                         'preview': False
                     }
                 )
 
                 clinic_available_time_slots_response_json = clinic_available_time_slots_response.json()
-                for available_day_json in clinic_available_time_slots_response_json:
+                clinic_available_time_slots_response_json_list = []
+
+                while len(clinic_available_time_slots_response_json) > 0:
+                    clinic_available_time_slots_response_json_list.append(clinic_available_time_slots_response_json[0])
+                    clinic_available_time_slots_response = requests.get(
+                        clinic_timeslots_url,
+                        params = {
+                            'appointmentTypeId': each_clinic["appointmentTypeId"],
+                            'timezone': "America/Halifax",
+                            'startDate': (datetime.strptime(clinic_available_time_slots_response_json[0]["date"], "%Y-%m-%d") + timedelta(days=1)).strftime('%Y-%m-%d'),
+                            'preview': False
+                        }
+                    )
+                    clinic_available_time_slots_response_json = clinic_available_time_slots_response.json()
+
+                
+                for available_day_json in clinic_available_time_slots_response_json_list:
                     print("\t" + available_day_json["date"])
                     print('\t' + str([pytz.utc.localize(datetime.strptime(each_time_slot["time"], "%Y-%m-%dT%H:%M:%S.%fZ")).astimezone(pytz.timezone("America/Halifax")).time().strftime("%H:%M") for each_time_slot in available_day_json["availabilities"]]))
                     print()
@@ -68,9 +84,9 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
 
 if(__name__ == "__main__"):
 
-    interested_locations = ["halifax", "bedford", "dartmouth", "yarmouth"]
+    interested_locations = ["bedford"]
     location_filter = True
-    get_time_slots = False
+    get_time_slots = True
     
     get_available_vaccine_appointments(
         location_filter = location_filter,
