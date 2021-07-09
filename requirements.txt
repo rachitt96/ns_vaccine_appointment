@@ -1,2 +1,6 @@
 pytz
 requests
+google-cloud-pubsub
+google-auth
+python-dotenv
+sendgrid

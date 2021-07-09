@@ -4,6 +4,8 @@ This program prints all clinics in Nova Scotia where COVID-19 vaccine appointmen
 
 Note:- This can only work for Nova Scotia (one of the provinces of Atlantic Canada)
 
+![Architecture Diagram](architecture_diagram.png "Architecture Diagram")
+
 ## Installation ##
 
 - This program is based on Python language. So, the first step is to install Python 3, if haven't installed in machine yet.
@@ -41,8 +43,11 @@ Note:- This can only work for Nova Scotia (one of the provinces of Atlantic Cana
 
 ## Run ##
 
-In order to get the list of clinics, we will need to run a python program:
+In order to get the list of clinics in real time for specific filters, we will need to run a python program:
 
 ```
 python appointment_availability.py
 ```
+
+We can modify the filters by changing variable values inside main method.
+
