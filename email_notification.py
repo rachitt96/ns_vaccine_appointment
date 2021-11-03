@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import google.auth
 
 from appointment_availability import get_available_vaccine_appointments
+from reschedule_appointment import automatically_reschedule_appointment
 
 load_dotenv()
 
@@ -61,22 +62,41 @@ credentials, project = google.auth.default()
 
 def callback(message):
 
-    interested_locations = ["halifax", "bedford", "dartmouth"]
+    interested_locations = ["bedford"]
     location_filter = True
     get_time_slots = True
     interested_vaccines = ["pfizer"]
 
+    """
     filtered_appointments = get_available_vaccine_appointments(
         location_filter = location_filter,
         get_time_slots = get_time_slots,
         interested_locations = interested_locations,
         interested_vaccines = interested_vaccines
     )
+    """
+
+    filtered_appointments = get_available_vaccine_appointments(
+        location_filter = location_filter,
+        get_time_slots = get_time_slots,
+        interested_locations = interested_locations,
+        interested_vaccines = interested_vaccines,
+        automatic_reschedule = True,
+        date_threshold = '2021-07-20'
+    )
 
     if(len(filtered_appointments) > 0):
+        
+        """
         generate_email(
             available_appointments_list = filtered_appointments
         )
+        """
+        automatically_reschedule_appointment(
+            available_appointments_list = filtered_appointments,
+            time_threshold_str = "16:00"
+        )
+
 
     message.ack()
 

@@ -4,7 +4,7 @@ from datetime import timedelta
 from datetime import date
 import pytz
 
-def get_available_vaccine_appointments(location_filter = True, get_time_slots = True, interested_vaccines = ["pfizer", "moderna", "astrazeneca"], print_in_console = True, interested_locations = None):
+def get_available_vaccine_appointments(location_filter = True, get_time_slots = True, interested_vaccines = ["pfizer", "moderna", "astrazeneca"], print_in_console = True, automatic_reschedule = False, date_threshold = None, interested_locations = None):
     """
     A function to print all clinic (with available time slots) in interested cities where appointment is available. Respose is based on real time.
 
@@ -39,8 +39,16 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
             'time_slots': []
         }
     }
+
+    if automatic_reschedule:
+        result_json_dict_template['clinic_reschedule_details'] = {}
+
     filtered_results = [result_json_dict_template]
     appointment_found_count = -1
+
+    threshold_date_obj = None
+    if(date_threshold):
+        threshold_date_obj = datetime.strptime(date_threshold, '%Y-%m-%d').date()
 
     for index, each_clinic in enumerate(all_clinics_response_json['results']):
         if(each_clinic["status"] == "active" and each_clinic["fullyBooked"] == False):
@@ -59,6 +67,7 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
             
             print("***************** appointment found **************")
             print()
+            print(each_clinic["id"])
             print(each_clinic["mapsLocationString"])
             print("Age Eligibility: " + str(each_clinic["minAge"]) + "+")
             #print("Vaccine: " + each_clinic["clinicName"].split(" ")[-1])
@@ -69,6 +78,10 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
             filtered_results[appointment_found_count]['clinic_address'] = each_clinic["mapsLocationString"]
             filtered_results[appointment_found_count]['clinic_name'] = each_clinic["clinicName"]
             filtered_results[appointment_found_count]['vaccine'] = each_clinic["nameEn"].split(" ")[-1]
+
+            if(automatic_reschedule):
+                filtered_results[appointment_found_count]['clinic_reschedule_details'] = each_clinic
+
 
             if(get_time_slots):
                 current_date = date.today()
@@ -88,6 +101,13 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
                 clinic_available_time_slots_response_json_list = []
 
                 while len(clinic_available_time_slots_response_json) > 0:
+
+                    if(date_threshold):
+                        available_date_obj = datetime.strptime(clinic_available_time_slots_response_json[0]['date'], '%Y-%m-%d').date()
+                        print(available_date_obj)
+                        if(available_date_obj >= threshold_date_obj):
+                            break
+                        
                     clinic_available_time_slots_response_json_list.append(clinic_available_time_slots_response_json[0])
                     clinic_available_time_slots_response = requests.get(
                         clinic_timeslots_url,
@@ -107,7 +127,17 @@ def get_available_vaccine_appointments(location_filter = True, get_time_slots = 
                     print()
 
                     filtered_results[appointment_found_count]['available_date_time']['date'].append(available_day_json["date"])
-                    filtered_results[appointment_found_count]['available_date_time']['time_slots'].append([pytz.utc.localize(datetime.strptime(each_time_slot["time"], "%Y-%m-%dT%H:%M:%S.%fZ")).astimezone(pytz.timezone("America/Halifax")).time().strftime("%H:%M") for each_time_slot in available_day_json["availabilities"]])            
+                    filtered_results[appointment_found_count]['available_date_time']['time_slots'].append([pytz.utc.localize(datetime.strptime(each_time_slot["time"], "%Y-%m-%dT%H:%M:%S.%fZ")).astimezone(pytz.timezone("America/Halifax")).time().strftime("%H:%M") for each_time_slot in available_day_json["availabilities"]])
+
+                    if(automatic_reschedule):
+                        if 'datetime' not in filtered_results[appointment_found_count]['clinic_reschedule_details']:
+                            filtered_results[appointment_found_count]['clinic_reschedule_details']['datetime'] = []
+                        
+                        original_datetime_list = []
+                        for each_time_slot in available_day_json["availabilities"]:
+                            original_datetime_list.append(each_time_slot["time"])
+                        filtered_results[appointment_found_count]['clinic_reschedule_details']['datetime'].append(original_datetime_list)  
+                        #print(filtered_results[appointment_found_count]['clinic_reschedule_details']['datetime'])       
             
             filtered_results.append(result_json_dict_template)
             print()
@@ -126,5 +156,7 @@ if(__name__ == "__main__"):
         location_filter = location_filter,
         get_time_slots = get_time_slots,
         interested_locations = interested_locations,
-        interested_vaccines = interested_vaccines
+        interested_vaccines = interested_vaccines,
+        automatic_reschedule = True,
+        date_threshold = '2021-07-20'
     )

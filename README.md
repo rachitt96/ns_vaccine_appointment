@@ -1,10 +1,10 @@
 # Nova Scotia COVID-19 Vaccine Appointment Availability #
 
-This program prints all clinics in Nova Scotia where COVID-19 vaccine appointment is available. 
+This program prints all clinics in Nova Scotia where COVID-19 vaccine appointment is available. In addition, it can also automatically send an email notification whenever the appointment gets available, if integrated with cloud scheduler. 
 
 Note:- This can only work for Nova Scotia (one of the provinces of Atlantic Canada)
 
-![Architecture Diagram](architecture_diagram.png "Architecture Diagram")
+![Architecture Diagram](architecture_diagram_white.png "Architecture Diagram")
 
 ## Installation ##
 
@@ -43,11 +43,13 @@ Note:- This can only work for Nova Scotia (one of the provinces of Atlantic Cana
 
 ## Run ##
 
-In order to get the list of clinics in real time for specific filters, we will need to run a python program:
+1. Manually running the program
 
-```
-python appointment_availability.py
-```
+    In order to get the list of clinics in real time for specific filters, we will need to run a python program:
 
-We can modify the filters by changing variable values inside main method.
+    ```
+    python appointment_availability.py
+    ```
+
+    We can modify the filters by changing variable values inside main method.
 
